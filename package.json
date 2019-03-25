@@ -1,0 +1,23 @@
+{
+  "name": "elevator-music",
+  "version": "1.0.0",
+  "description": "Listen while you await",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tysonmcnulty/elevator-music.git"
+  },
+  "author": "Tyson McNulty",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tysonmcnulty/elevator-music/issues"
+  },
+  "homepage": "https://github.com/tysonmcnulty/elevator-music#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "jasmine": "^3.3.1"
+  }
+}
