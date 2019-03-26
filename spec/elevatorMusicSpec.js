@@ -1,25 +1,24 @@
-const ElevatorMusic = require("../src/ElevatorMusic");
+const { wrap } = require("../src/ElevatorMusic");
 
 describe("elevator music", () => {
-    it("wraps the provided function", async () => {
-        const doWorkNow = jasmine.createSpy("doWorkNow");
-        doWorkNow.and.returnValue("done");
-        const wrapper = ElevatorMusic.wrap(doWorkNow);
+    const verifyWrapping = (name, returnValue) => describe(`function wrapping: ${name}`, () => {
+        let wrappedFunction;
 
-        const result = await wrapper();
+        beforeEach(() => {
+            wrappedFunction = jasmine.createSpy(name);
+            wrappedFunction.and.returnValue(returnValue);;
+        });
 
-        expect(doWorkNow).toHaveBeenCalled();
-        expect(result).toEqual("done");
+        it("wraps the provided function", async () => {
+            const wrapper = wrap(wrappedFunction);
+
+            const result = await wrapper();
+
+            expect(wrappedFunction).toHaveBeenCalled();
+            expect(result).toEqual(await returnValue);
+        });
     });
 
-    it("wraps an asynchronous function", async () => {
-        const doWorkEventually = jasmine.createSpy("doWorkEventually");
-        doWorkEventually.and.returnValue(Promise.resolve("done"));
-        const wrapper = ElevatorMusic.wrap(doWorkEventually);
-
-        const result = await wrapper();
-
-        expect(doWorkEventually).toHaveBeenCalled();
-        expect(result).toEqual("done");
-    });
+    verifyWrapping("doWorkNow", "done");
+    verifyWrapping("doWorkEventually", Promise.resolve("done"));
 });
