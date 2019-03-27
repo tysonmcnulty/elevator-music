@@ -1,9 +1,9 @@
 const ElevatorMusic = require("../src/ElevatorMusic");
 
-async function eventualResultOf(p) {
+async function eventualResultOf(fn) {
     try {
         return {
-            value: await Promise.resolve(p),
+            value: await fn(),
             error: false
         };
     } catch (e) {
@@ -25,25 +25,25 @@ describe("elevator music", () => {
 
     function verifyWrapping(fn) {
         describe(`function wrapping: ${fn.name}`, () => {
-            let wrappedFunction;
+            let fnSpy;
             let wrapper;
 
             beforeEach(() => {
-                wrappedFunction = jasmine.createSpy(fn.name);
-                wrappedFunction.and.callFake(fn);
+                fnSpy = jasmine.createSpy(fn.name);
+                fnSpy.and.callFake(fn);
 
-                wrapper = wrap(wrappedFunction);
+                wrapper = wrap(fnSpy);
             });
 
-            it("wraps the provided function", async () => {
-                const result = await eventualResultOf(wrapper());
+            it("calls the provided function", async () => {
+                const result = await eventualResultOf(wrapper);
 
-                expect(wrappedFunction).toHaveBeenCalled();
-                expect(result).toEqual(await eventualResultOf(fn()));
+                expect(fnSpy).toHaveBeenCalled();
+                expect(result).toEqual(await eventualResultOf(fn));
             });
 
             it("starts and stops the player", async () => {
-                await eventualResultOf(wrapper());
+                await eventualResultOf(wrapper);
 
                 expect(player.start).toHaveBeenCalled();
                 expect(player.stop).toHaveBeenCalled();
@@ -51,7 +51,8 @@ describe("elevator music", () => {
         });
     }
 
-    verifyWrapping(function doWorkNow() { return "done!" });
-    verifyWrapping(function doWorkEventually() { return Promise.resolve("done!") });
-    verifyWrapping(function failEventually() { return Promise.reject("oops!!!") });
+    verifyWrapping(function finishNow() { return "finish now!" });
+    verifyWrapping(function finishLater() { return Promise.resolve("finish later!") });
+    verifyWrapping(function failNow() { throw "fail now!" });
+    verifyWrapping(function failLater() { return Promise.reject("fail later!") });
 });
