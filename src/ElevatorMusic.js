@@ -9,10 +9,14 @@ class ElevatorMusic {
 
         return async () => {
             self.player.start();
-            const result = await fn();
-            self.player.stop();
-            return result;
-        }
+            try {
+                return await fn();
+            } catch(e) {
+                throw(e);
+            } finally {
+                self.player.stop();
+            }
+        };
     }
 }
 

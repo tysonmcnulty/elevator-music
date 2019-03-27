@@ -1,5 +1,19 @@
 const ElevatorMusic = require("../src/ElevatorMusic");
 
+async function eventualResultOf(p) {
+    try {
+        return {
+            value: await Promise.resolve(p),
+            error: false
+        };
+    } catch (e) {
+        return {
+            value: e,
+            error: true
+        }
+    }
+}
+
 describe("elevator music", () => {
     let player;
     let wrap;
@@ -9,32 +23,35 @@ describe("elevator music", () => {
         wrap = new ElevatorMusic(player).wrap;
     });
 
-    const verifyWrapping = (name, returnValue) => describe(`function wrapping: ${name}`, () => {
-        let wrappedFunction;
-        let wrapper;
+    function verifyWrapping(fn) {
+        describe(`function wrapping: ${fn.name}`, () => {
+            let wrappedFunction;
+            let wrapper;
 
-        beforeEach(() => {
-            wrappedFunction = jasmine.createSpy(name);
-            wrappedFunction.and.returnValue(returnValue);
+            beforeEach(() => {
+                wrappedFunction = jasmine.createSpy(fn.name);
+                wrappedFunction.and.callFake(fn);
 
-            wrapper = wrap(wrappedFunction);
+                wrapper = wrap(wrappedFunction);
+            });
+
+            it("wraps the provided function", async () => {
+                const result = await eventualResultOf(wrapper());
+
+                expect(wrappedFunction).toHaveBeenCalled();
+                expect(result).toEqual(await eventualResultOf(fn()));
+            });
+
+            it("starts and stops the player", async () => {
+                await eventualResultOf(wrapper());
+
+                expect(player.start).toHaveBeenCalled();
+                expect(player.stop).toHaveBeenCalled();
+            });
         });
+    }
 
-        it("wraps the provided function", async () => {
-            const result = await wrapper();
-
-            expect(wrappedFunction).toHaveBeenCalled();
-            expect(result).toEqual(await returnValue);
-        });
-
-        it("starts and stops the player", async () => {
-            await wrapper();
-
-            expect(player.start).toHaveBeenCalled();
-            expect(player.stop).toHaveBeenCalled();
-        })
-    });
-
-    verifyWrapping("doWorkNow", "done");
-    verifyWrapping("doWorkEventually", Promise.resolve("done"));
+    verifyWrapping(function doWorkNow() { return "done!" });
+    verifyWrapping(function doWorkEventually() { return Promise.resolve("done!") });
+    verifyWrapping(function failEventually() { return Promise.reject("oops!!!") });
 });
